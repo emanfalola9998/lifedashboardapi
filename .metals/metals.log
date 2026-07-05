@@ -1,0 +1,101 @@
+2026.06.02 19:29:25 INFO  Started: Metals version 1.6.7 in folders 'C:\Users\emman\Developer\life-dashboard-api' for client Visual Studio Code 1.119.0.
+2026.06.02 19:29:25 INFO  time: initialize in 0.12s
+2026.06.02 19:29:25 INFO  Memory monitor started
+2026.06.02 19:29:28 WARN  Using H2 2.4.240 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026.06.02 19:29:53 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:29:55 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+Jun 02, 2026 7:29:55 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 1
+2026.06.02 19:29:55 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:29:55 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:29:55 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+Jun 02, 2026 7:29:56 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 7
+2026.06.02 19:29:55 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:11 WARN  no build target for: C:\Users\emman\Developer\life-dashboard-api\build.sbt
+2026.06.02 19:30:11 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:16 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:16 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:18 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:18 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:18 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:19 WARN  no build target for: C:\Users\emman\Developer\life-dashboard-api\build.sbt
+2026.06.02 19:30:19 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:19 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:19 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:19 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:19 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\build.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:26 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:26 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+Jun 02, 2026 7:30:26 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 35
+2026.06.02 19:30:26 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:26 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:26 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:32 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:37 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:37 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:37 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:37 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:38 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:38 WARN  no build target for: C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt
+2026.06.02 19:30:38 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:38 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:38 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:38 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:38 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:44 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:44 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:44 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:44 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:44 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:46 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:46 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:46 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:46 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:47 WARN  no build target for: C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:46 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:47 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:47 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:48 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:48 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:48 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 WARN  no build target for: C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt
+2026.06.02 19:30:49 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:48 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:48 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:48 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:49 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:50 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:50 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:50 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:51 WARN  no build target for: C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt
+2026.06.02 19:30:51 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:51 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+2026.06.02 19:30:51 INFO  no build target found for C:\Users\emman\Developer\life-dashboard-api\project\plugins.sbt. Using presentation compiler with project's scala-library version: 3.3.7
+2026.06.02 19:30:51 WARN  Could not find semantic tokens for: file:///C:/Users/emman/Developer/life-dashboard-api/project/plugins.sbt
+Jun 02, 2026 7:34:49 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2026.06.02 19:36:29 INFO  Shutting down server
+2026.06.02 19:36:29 INFO  Memory monitor stopped
+2026.06.02 19:36:29 INFO  shutting down Metals
+2026.06.02 19:36:29 INFO  Exiting server
