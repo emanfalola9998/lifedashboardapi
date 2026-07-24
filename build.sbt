@@ -9,8 +9,10 @@ scalaVersion := "3.3.3"
 
 libraryDependencies ++= Seq(
   guice,
+  ws,
   jdbc,
   evolutions,
+  ehcache,
   "org.playframework" %% "play-slick" % "6.1.0",
   "org.postgresql" % "postgresql" % "42.7.3",
   "org.playframework.anorm" %% "anorm" % "2.8.1",
