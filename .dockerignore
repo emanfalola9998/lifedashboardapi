@@ -1,0 +1,7 @@
+target/
+.git/
+.idea/
+.metals/
+.vscode/
+*.log
+local.conf
