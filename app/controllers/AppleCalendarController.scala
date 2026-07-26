@@ -9,8 +9,11 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class AppleCalendarController @Inject()(
   cc: ControllerComponents,
-  ws: WSClient
-)(using ExecutionContext) extends AbstractController(cc) {
+  ws: WSClient,
+  ec: ExecutionContext
+) extends AbstractController(cc) {
+
+  given ExecutionContext = ec
 
   def fetchEvents(url: String): Action[AnyContent] = Action.async {
     val fetchUrl = url.replace("webcal://", "https://")
