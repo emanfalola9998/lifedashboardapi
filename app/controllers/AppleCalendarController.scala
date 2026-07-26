@@ -65,20 +65,19 @@ class AppleCalendarController @Inject()(
       }
     }
 
-    // Filter to events starting within the next 14 days
-    val now    = java.time.Instant.now()
-    val cutoff = now.plus(java.time.Duration.ofDays(14))
+    // Show all upcoming events (no upper cutoff — ICS file already scopes what's shared)
+    val now = java.time.Instant.now()
 
     val filtered = events.filter { ev =>
-      try {
+      if (ev.dtStart.isEmpty) false
+      else try {
         val instant = java.time.Instant.parse(ev.dtStart)
-        !instant.isBefore(now) && instant.isBefore(cutoff)
+        !instant.isBefore(now)
       } catch { case _: Exception =>
-        // All-day events have date-only strings like 2025-07-26
         try {
           val date = java.time.LocalDate.parse(ev.dtStart)
             .atStartOfDay(java.time.ZoneOffset.UTC).toInstant
-          !date.isBefore(now) && date.isBefore(cutoff)
+          !date.isBefore(now)
         } catch { case _: Exception => false }
       }
     }.sortBy(_.dtStart)
