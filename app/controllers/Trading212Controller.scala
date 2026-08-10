@@ -57,9 +57,9 @@ class Trading212Controller @Inject()(
           cashRes <- cashFut
         } yield {
           if (posRes.status == 401 || cashRes.status == 401) {
-            Unauthorized(Json.obj("error" -> "Invalid API key", "body" -> posRes.body))
+            Unauthorized(Json.obj("error" -> "Invalid API key"))
           } else if (posRes.status != 200) {
-            BadGateway(Json.obj("error" -> s"Trading 212 error: ${posRes.status}", "body" -> posRes.body))
+            BadGateway(Json.obj("error" -> s"Trading 212 error: ${posRes.status}"))
           } else {
             // T212 returns either a raw array or {"items":[...]} depending on account type
             val rawItems: Seq[JsValue] = posRes.json match {
@@ -90,7 +90,7 @@ class Trading212Controller @Inject()(
             val cash = cashRes.json
             Ok(Json.obj(
               "positions"    -> JsArray(positions),
-              "rawPositions" -> posRes.body,   // debug — remove once working
+              "rawPositions" -> posRes.json.toString(),
               "cash"         -> Json.obj(
                 "free"     -> (cash \ "free").asOpt[Double].getOrElse(0.0),
                 "invested" -> (cash \ "invested").asOpt[Double].getOrElse(0.0),
