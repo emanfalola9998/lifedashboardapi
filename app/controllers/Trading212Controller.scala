@@ -42,8 +42,7 @@ class Trading212Controller @Inject()(
     repo.getKey(userId) match {
       case None => Future.successful(Unauthorized(Json.obj("error" -> "Not connected")))
       case Some(apiKey) =>
-        val authValue = if (apiKey.startsWith("Bearer ")) apiKey else s"Bearer $apiKey"
-        val headers = Seq("Authorization" -> authValue)
+        val headers = Seq("Authorization" -> apiKey)
 
         val positionsFut = ws.url(s"$T212_BASE/equity/portfolio")
           .withHttpHeaders(headers: _*)
