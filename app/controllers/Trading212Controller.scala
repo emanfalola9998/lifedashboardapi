@@ -28,18 +28,25 @@ class Trading212Controller @Inject()(
     (request.body \ "apiKey").asOpt[String].map(_.trim).filter(_.nonEmpty) match {
       case None => Future.successful(BadRequest(Json.obj("error" -> "apiKey is required")))
       case Some(key) =>
-        // Probe live first, fall back to demo — stores "live:<key>" or "demo:<key>"
-        ws.url(s"$LIVE_BASE/equity/account/cash").withHttpHeaders("Authorization" -> key).get().flatMap { res =>
+        val apiId  = (request.body \ "apiId").asOpt[String].map(_.trim).getOrElse("")
+        // Build Basic auth: base64(id:key). If no id provided fall back to raw key for legacy.
+        val authHeader = if (apiId.nonEmpty) {
+          val encoded = java.util.Base64.getEncoder.encodeToString(s"$apiId:$key".getBytes("UTF-8"))
+          s"Basic $encoded"
+        } else key
+
+        // Probe live first, fall back to demo — stores "live:<authHeader>" or "demo:<authHeader>"
+        ws.url(s"$LIVE_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).get().flatMap { res =>
           if (res.status == 200) {
-            repo.saveKey(userId, s"live:$key")
+            repo.saveKey(userId, s"live:$authHeader")
             Future.successful(Ok(Json.obj("connected" -> true, "mode" -> "live")))
           } else {
-            ws.url(s"$DEMO_BASE/equity/account/cash").withHttpHeaders("Authorization" -> key).get().map { dRes =>
+            ws.url(s"$DEMO_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).get().map { dRes =>
               if (dRes.status == 200) {
-                repo.saveKey(userId, s"demo:$key")
+                repo.saveKey(userId, s"demo:$authHeader")
                 Ok(Json.obj("connected" -> true, "mode" -> "demo"))
               } else {
-                Unauthorized(Json.obj("error" -> "Invalid API key — check it was generated from the correct account (Live or Practice ISA)"))
+                Unauthorized(Json.obj("error" -> s"Invalid credentials (got ${res.status} from live, ${dRes.status} from demo) — check your ID and Key"))
               }
             }
           }
