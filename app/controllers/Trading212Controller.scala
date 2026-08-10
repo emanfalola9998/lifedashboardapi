@@ -17,19 +17,33 @@ class Trading212Controller @Inject()(
 
   given ExecutionContext = ec
 
-  private val T212_BASE = "https://live.trading212.com/api/v0"
+  private val LIVE_BASE = "https://live.trading212.com/api/v0"
+  private val DEMO_BASE = "https://demo.trading212.com/api/v0"
 
   def status(userId: String): Action[AnyContent] = Action {
     Ok(Json.obj("connected" -> repo.getKey(userId).isDefined))
   }
 
-  def connect(userId: String): Action[JsValue] = Action(parse.json) { request =>
-    (request.body \ "apiKey").asOpt[String].filter(_.nonEmpty) match {
+  def connect(userId: String): Action[JsValue] = Action.async(parse.json) { request =>
+    (request.body \ "apiKey").asOpt[String].map(_.trim).filter(_.nonEmpty) match {
+      case None => Future.successful(BadRequest(Json.obj("error" -> "apiKey is required")))
       case Some(key) =>
-        repo.saveKey(userId, key)
-        Ok(Json.obj("connected" -> true))
-      case None =>
-        BadRequest(Json.obj("error" -> "apiKey is required"))
+        // Probe live first, fall back to demo — stores "live:<key>" or "demo:<key>"
+        ws.url(s"$LIVE_BASE/equity/account/cash").withHttpHeaders("Authorization" -> key).get().flatMap { res =>
+          if (res.status == 200) {
+            repo.saveKey(userId, s"live:$key")
+            Future.successful(Ok(Json.obj("connected" -> true, "mode" -> "live")))
+          } else {
+            ws.url(s"$DEMO_BASE/equity/account/cash").withHttpHeaders("Authorization" -> key).get().map { dRes =>
+              if (dRes.status == 200) {
+                repo.saveKey(userId, s"demo:$key")
+                Ok(Json.obj("connected" -> true, "mode" -> "demo"))
+              } else {
+                Unauthorized(Json.obj("error" -> "Invalid API key — check it was generated from the correct account (Live or Practice ISA)"))
+              }
+            }
+          }
+        }
     }
   }
 
@@ -41,14 +55,16 @@ class Trading212Controller @Inject()(
   def portfolio(userId: String): Action[AnyContent] = Action.async {
     repo.getKey(userId) match {
       case None => Future.successful(Unauthorized(Json.obj("error" -> "Not connected")))
-      case Some(apiKey) =>
+      case Some(stored) =>
+        val (base, apiKey) = if (stored.startsWith("demo:")) (DEMO_BASE, stored.drop(5))
+                             else (LIVE_BASE, if (stored.startsWith("live:")) stored.drop(5) else stored)
         val headers = Seq("Authorization" -> apiKey)
 
-        val positionsFut = ws.url(s"$T212_BASE/equity/portfolio")
+        val positionsFut = ws.url(s"$base/equity/portfolio")
           .withHttpHeaders(headers: _*)
           .get()
 
-        val cashFut = ws.url(s"$T212_BASE/equity/account/cash")
+        val cashFut = ws.url(s"$base/equity/account/cash")
           .withHttpHeaders(headers: _*)
           .get()
 
