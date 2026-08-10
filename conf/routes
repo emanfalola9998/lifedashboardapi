@@ -16,6 +16,12 @@ GET     /calendar/status/:userId                 controllers.GoogleAuthControlle
 GET     /calendar/events/:userId                 controllers.GoogleAuthController.events(userId: String)
 POST    /calendar/disconnect/:userId             controllers.GoogleAuthController.disconnect(userId: String)
 
+# Trading 212
+GET     /trading212/status/:userId              controllers.Trading212Controller.status(userId: String)
+POST    /trading212/connect/:userId             controllers.Trading212Controller.connect(userId: String)
+DELETE  /trading212/disconnect/:userId          controllers.Trading212Controller.disconnect(userId: String)
+GET     /trading212/portfolio/:userId           controllers.Trading212Controller.portfolio(userId: String)
+
 # Apple Calendar ICS proxy
 GET     /calendar/apple                          controllers.AppleCalendarController.fetchEvents(url: String)
 
