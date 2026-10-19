@@ -18,20 +18,18 @@ class AppleCalendarController @Inject()(
 
   given ExecutionContext = ec
 
-  private val AllowedHosts = Set(
-    "p01-caldav.icloud.com", "p02-caldav.icloud.com", "p03-caldav.icloud.com",
-    "p04-caldav.icloud.com", "p05-caldav.icloud.com", "p06-caldav.icloud.com",
-    "p07-caldav.icloud.com", "p08-caldav.icloud.com", "p09-caldav.icloud.com",
-    "p10-caldav.icloud.com", "calendar.google.com", "outlook.live.com",
-    "outlook.office365.com", "caldav.fastmail.com"
-  )
+  private val ICloudPattern  = """^p\d+-caldav\.icloud\.com$""".r
+  private val AllowedHosts   = Set("calendar.google.com", "outlook.live.com", "outlook.office365.com", "caldav.fastmail.com")
+
+  private def hostAllowed(host: String): Boolean =
+    AllowedHosts.contains(host) || ICloudPattern.matches(host)
 
   def fetchEvents(url: String): Action[AnyContent] = secured.async {
     val fetchUrl = url.replace("webcal://", "https://")
     val parsed   = scala.util.Try(new java.net.URI(fetchUrl)).toOption
 
     val hostOk = parsed.exists { uri =>
-      uri.getScheme == "https" && AllowedHosts.exists(h => Option(uri.getHost).exists(_.endsWith(h)))
+      uri.getScheme == "https" && Option(uri.getHost).exists(hostAllowed)
     }
 
     if (!hostOk) {
@@ -39,6 +37,7 @@ class AppleCalendarController @Inject()(
     } else {
       ws.url(fetchUrl)
         .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
+        .withFollowRedirects(false)
         .get()
         .map { response =>
           val now    = java.time.Instant.now()

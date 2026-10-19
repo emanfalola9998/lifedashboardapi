@@ -32,8 +32,10 @@ class RateLimitFilter @Inject()(implicit ec: ExecutionContext) {
     def parser: BodyParser[A] = action.parser
 
     def apply(request: Request[A]): Future[Result] = {
-      val ip = request.headers.get("X-Forwarded-For").getOrElse(request.remoteAddress)
-      if (check(ip)) action(request)
+      val key = request.headers.get("X-User-Id")
+        .orElse(request.headers.get("X-Forwarded-For"))
+        .getOrElse(request.remoteAddress)
+      if (check(key)) action(request)
       else Future.successful(Results.TooManyRequests("Rate limit exceeded. Try again in a minute."))
     }
 

@@ -5,7 +5,8 @@ import play.api.libs.json.*
 import services.GoogleCalendarService
 import actions.SecuredAction
 import javax.inject.*
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
+import java.util.concurrent.TimeoutException
 
 class GoogleAuthController @Inject()(
   cc: ControllerComponents,
@@ -30,8 +31,9 @@ class GoogleAuthController @Inject()(
 
     calendarService.exchangeCode(code, userId).map { _ =>
       Redirect(s"$frontendUrl?calendar=connected")
-    }.recover { case ex =>
-      InternalServerError(s"OAuth failed: ${ex.getMessage}")
+    }.recover {
+      case _: TimeoutException => GatewayTimeout(Json.obj("error" -> "Google OAuth timed out"))
+      case ex                  => InternalServerError(s"OAuth failed: ${ex.getMessage}")
     }
   }
 
@@ -40,7 +42,9 @@ class GoogleAuthController @Inject()(
   }
 
   def events(userId: String): Action[AnyContent] = secured.async {
-    calendarService.getEvents(userId).map(data => Ok(data))
+    calendarService.getEvents(userId).map(data => Ok(data)).recover {
+      case _: TimeoutException => GatewayTimeout(Json.obj("error" -> "Google Calendar timed out"))
+    }
   }
 
   def disconnect(userId: String): Action[AnyContent] = secured {

@@ -7,6 +7,7 @@ import play.api.Configuration
 import play.api.libs.json.*
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -38,8 +39,11 @@ class GoogleCalendarService @Inject()(
     s"https://accounts.google.com/o/oauth2/v2/auth?$params"
   }
 
+  private val Timeout = 10.seconds
+
   def exchangeCode(code: String, userId: String): Future[Unit] = {
     ws.url("https://oauth2.googleapis.com/token")
+      .withRequestTimeout(Timeout)
       .post(Map(
         "code"          -> Seq(code),
         "client_id"     -> Seq(clientId),
@@ -66,6 +70,7 @@ class GoogleCalendarService @Inject()(
         case None => Future.failed(new Exception("No refresh token — user must re-authenticate"))
         case Some(rt) =>
           ws.url("https://oauth2.googleapis.com/token")
+            .withRequestTimeout(Timeout)
             .post(Map(
               "refresh_token" -> Seq(rt),
               "client_id"     -> Seq(clientId),
@@ -93,6 +98,7 @@ class GoogleCalendarService @Inject()(
           val now      = java.time.Instant.now().toString
           val twoWeeks = java.time.Instant.now().plusSeconds(14 * 24 * 3600).toString
           ws.url("https://www.googleapis.com/calendar/v3/calendars/primary/events")
+            .withRequestTimeout(Timeout)
             .addQueryStringParameters(
               "timeMin"      -> now,
               "timeMax"      -> twoWeeks,
