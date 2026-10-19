@@ -4,6 +4,8 @@ import play.api.mvc.*
 import play.api.libs.json.*
 import play.api.libs.ws.*
 import repositories.Trading212Repository
+import actions.SecuredAction
+import parsing.T212Normaliser
 import javax.inject.*
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -12,6 +14,7 @@ class Trading212Controller @Inject()(
   cc: ControllerComponents,
   ws: WSClient,
   repo: Trading212Repository,
+  secured: SecuredAction,
   ec: ExecutionContext
 ) extends AbstractController(cc) {
 
@@ -20,11 +23,11 @@ class Trading212Controller @Inject()(
   private val LIVE_BASE = "https://live.trading212.com/api/v0"
   private val DEMO_BASE = "https://demo.trading212.com/api/v0"
 
-  def status(userId: String): Action[AnyContent] = Action {
+  def status(userId: String): Action[AnyContent] = secured {
     Ok(Json.obj("connected" -> repo.getKey(userId).isDefined))
   }
 
-  def connect(userId: String): Action[JsValue] = Action.async(parse.json) { request =>
+  def connect(userId: String): Action[JsValue] = secured.async(parse.json) { (request: Request[JsValue]) =>
     (request.body \ "apiKey").asOpt[String].map(_.trim).filter(_.nonEmpty) match {
       case None => Future.successful(BadRequest(Json.obj("error" -> "apiKey is required")))
       case Some(key) =>
@@ -36,12 +39,13 @@ class Trading212Controller @Inject()(
         } else key
 
         // Probe live first, fall back to demo — stores "live:<authHeader>" or "demo:<authHeader>"
-        ws.url(s"$LIVE_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).get().flatMap { res =>
+        val timeout = scala.concurrent.duration.Duration(10, "seconds")
+        ws.url(s"$LIVE_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).withRequestTimeout(timeout).get().flatMap { res =>
           if (res.status == 200) {
             repo.saveKey(userId, s"live:$authHeader")
             Future.successful(Ok(Json.obj("connected" -> true, "mode" -> "live")))
           } else {
-            ws.url(s"$DEMO_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).get().map { dRes =>
+            ws.url(s"$DEMO_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).withRequestTimeout(timeout).get().map { dRes =>
               if (dRes.status == 200) {
                 repo.saveKey(userId, s"demo:$authHeader")
                 Ok(Json.obj("connected" -> true, "mode" -> "demo"))
@@ -54,12 +58,12 @@ class Trading212Controller @Inject()(
     }
   }
 
-  def disconnect(userId: String): Action[AnyContent] = Action {
+  def disconnect(userId: String): Action[AnyContent] = secured {
     repo.deleteKey(userId)
     Ok(Json.obj("connected" -> false))
   }
 
-  def portfolio(userId: String): Action[AnyContent] = Action.async {
+  def portfolio(userId: String): Action[AnyContent] = secured.async {
     repo.getKey(userId) match {
       case None => Future.successful(Unauthorized(Json.obj("error" -> "Not connected")))
       case Some(stored) =>
@@ -69,10 +73,12 @@ class Trading212Controller @Inject()(
 
         val positionsFut = ws.url(s"$base/equity/portfolio")
           .withHttpHeaders(headers: _*)
+          .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
           .get()
 
         val cashFut = ws.url(s"$base/equity/account/cash")
           .withHttpHeaders(headers: _*)
+          .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
           .get()
 
         for {
@@ -84,37 +90,22 @@ class Trading212Controller @Inject()(
           } else if (posRes.status != 200) {
             BadGateway(Json.obj("error" -> s"Trading 212 error: ${posRes.status}"))
           } else {
-            // T212 returns either a raw array or {"items":[...]} depending on account type
-            val rawItems: Seq[JsValue] = posRes.json match {
-              case arr: JsArray => arr.value.toSeq
-              case obj: JsObject => (obj \ "items").asOpt[JsArray].map(_.value.toSeq).getOrElse(Seq.empty)
-              case _ => Seq.empty
-            }
-            val positions = rawItems.map { pos =>
-              val ticker      = (pos \ "ticker").asOpt[String].getOrElse("")
-              val quantity    = (pos \ "quantity").asOpt[Double].getOrElse(0.0)
-              val avgPrice    = (pos \ "averagePrice").asOpt[Double].getOrElse(0.0)
-              val currentPrice = (pos \ "currentPrice").asOpt[Double].getOrElse(0.0)
-              val ppl         = (pos \ "ppl").asOpt[Double].getOrElse(0.0)
-              val value       = quantity * currentPrice
-              val pct         = if (avgPrice > 0) ((currentPrice - avgPrice) / avgPrice) * 100 else 0.0
-
+            val positions = T212Normaliser.normalise(posRes.json).map { p =>
               Json.obj(
-                "ticker"        -> ticker,
-                "quantity"      -> quantity,
-                "averagePrice"  -> avgPrice,
-                "currentPrice"  -> currentPrice,
-                "value"         -> value,
-                "ppl"           -> ppl,
-                "pctChange"     -> pct,
+                "ticker"       -> p.ticker,
+                "quantity"     -> p.quantity,
+                "averagePrice" -> p.averagePrice,
+                "currentPrice" -> p.currentPrice,
+                "value"        -> p.value,
+                "ppl"          -> p.ppl,
+                "pctChange"    -> p.pctChange,
               )
             }
 
             val cash = cashRes.json
             Ok(Json.obj(
-              "positions"    -> JsArray(positions),
-              "rawPositions" -> posRes.json.toString(),
-              "cash"         -> Json.obj(
+              "positions" -> JsArray(positions),
+              "cash"      -> Json.obj(
                 "free"     -> (cash \ "free").asOpt[Double].getOrElse(0.0),
                 "invested" -> (cash \ "invested").asOpt[Double].getOrElse(0.0),
                 "ppl"      -> (cash \ "ppl").asOpt[Double].getOrElse(0.0),

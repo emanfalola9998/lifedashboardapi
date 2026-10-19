@@ -3,16 +3,21 @@ package controllers
 import play.api.mvc.*
 import play.api.libs.json.*
 import services.GoogleCalendarService
+import actions.SecuredAction
 import javax.inject.*
 import scala.concurrent.ExecutionContext
 
 class GoogleAuthController @Inject()(
   cc: ControllerComponents,
   calendarService: GoogleCalendarService,
+  config: play.api.Configuration,
+  secured: SecuredAction,
   ec: ExecutionContext
 ) extends AbstractController(cc) {
 
   given ExecutionContext = ec
+
+  private val frontendUrl = config.get[String]("google.frontendUrl")
 
   def redirect: Action[AnyContent] = Action { implicit request =>
     val userId = request.getQueryString("userId").getOrElse("default-user")
@@ -24,22 +29,21 @@ class GoogleAuthController @Inject()(
     val userId = request.getQueryString("state").getOrElse("default-user")
 
     calendarService.exchangeCode(code, userId).map { _ =>
-      Redirect("http://localhost:3000?calendar=connected")
+      Redirect(s"$frontendUrl?calendar=connected")
     }.recover { case ex =>
       InternalServerError(s"OAuth failed: ${ex.getMessage}")
     }
   }
 
-  def status(userId: String): Action[AnyContent] = Action {
-    val connected = calendarService.isConnected(userId)
-    Ok(Json.obj("connected" -> connected))
+  def status(userId: String): Action[AnyContent] = secured {
+    Ok(Json.obj("connected" -> calendarService.isConnected(userId)))
   }
 
-  def events(userId: String): Action[AnyContent] = Action.async {
+  def events(userId: String): Action[AnyContent] = secured.async {
     calendarService.getEvents(userId).map(data => Ok(data))
   }
 
-  def disconnect(userId: String): Action[AnyContent] = Action {
+  def disconnect(userId: String): Action[AnyContent] = secured {
     calendarService.disconnect(userId)
     Ok(Json.obj("disconnected" -> true))
   }

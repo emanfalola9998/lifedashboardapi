@@ -3,112 +3,72 @@ package controllers
 import play.api.mvc.*
 import play.api.libs.json.*
 import play.api.libs.ws.*
+import actions.SecuredAction
+import parsing.IcsParser
 import javax.inject.*
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AppleCalendarController @Inject()(
   cc: ControllerComponents,
   ws: WSClient,
+  secured: SecuredAction,
   ec: ExecutionContext
 ) extends AbstractController(cc) {
 
   given ExecutionContext = ec
 
-  def fetchEvents(url: String): Action[AnyContent] = Action.async {
+  private val AllowedHosts = Set(
+    "p01-caldav.icloud.com", "p02-caldav.icloud.com", "p03-caldav.icloud.com",
+    "p04-caldav.icloud.com", "p05-caldav.icloud.com", "p06-caldav.icloud.com",
+    "p07-caldav.icloud.com", "p08-caldav.icloud.com", "p09-caldav.icloud.com",
+    "p10-caldav.icloud.com", "calendar.google.com", "outlook.live.com",
+    "outlook.office365.com", "caldav.fastmail.com"
+  )
+
+  def fetchEvents(url: String): Action[AnyContent] = secured.async {
     val fetchUrl = url.replace("webcal://", "https://")
-    ws.url(fetchUrl).get().map { response =>
-      val events = parseIcs(response.body)
-      Ok(Json.obj("events" -> events))
-    }.recover { case ex =>
-      BadGateway(Json.obj("error" -> ex.getMessage))
+    val parsed   = scala.util.Try(new java.net.URI(fetchUrl)).toOption
+
+    val hostOk = parsed.exists { uri =>
+      uri.getScheme == "https" && AllowedHosts.exists(h => Option(uri.getHost).exists(_.endsWith(h)))
     }
-  }
 
-  private def parseIcs(text: String): JsArray = {
-    // Unfold folded lines (lines continued with whitespace)
-    val unfolded = text.replace("\r\n ", "").replace("\r\n\t", "")
-      .replace("\n ", "").replace("\n\t", "")
-    val lines = unfolded.split("\r\n|\n").toList
-
-    case class Event(
-      summary: String = "",
-      dtStart: String = "",
-      dtEnd:   String = "",
-      location: Option[String] = None,
-      uid: String = ""
-    )
-
-    var events  = List.empty[Event]
-    var current = Option.empty[Event]
-
-    for (line <- lines) {
-      if (line == "BEGIN:VEVENT") {
-        current = Some(Event())
-      } else if (line == "END:VEVENT") {
-        current.foreach(ev => events = events :+ ev)
-        current = None
-      } else {
-        current = current.map { ev =>
-          val (key, value) = line.span(_ != ':') match {
-            case (k, v) => (k.takeWhile(_ != ';').toUpperCase, v.dropWhile(_ == ':'))
-          }
-          key match {
-            case "SUMMARY"  => ev.copy(summary  = value)
-            case "DTSTART"  => ev.copy(dtStart  = toIso(value))
-            case "DTEND"    => ev.copy(dtEnd    = toIso(value))
-            case "LOCATION" => ev.copy(location = Some(value))
-            case "UID"      => ev.copy(uid      = value)
-            case _          => ev
-          }
+    if (!hostOk) {
+      scala.concurrent.Future.successful(BadRequest(Json.obj("error" -> "URL must be an https:// link from a supported calendar provider")))
+    } else {
+      ws.url(fetchUrl)
+        .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
+        .get()
+        .map { response =>
+          val now    = java.time.Instant.now()
+          val events = IcsParser.parse(response.body)
+            .filter { ev =>
+              if (ev.dtStart.isEmpty) false
+              else scala.util.Try(java.time.Instant.parse(ev.dtStart)).map(!_.isBefore(now))
+                .orElse(scala.util.Try(java.time.LocalDate.parse(ev.dtStart)
+                  .atStartOfDay(java.time.ZoneOffset.UTC).toInstant).map(!_.isBefore(now)))
+                .getOrElse(false)
+            }
+            .sortBy(_.dtStart)
+            .map { ev =>
+              Json.obj(
+                "id"       -> ev.uid,
+                "summary"  -> ev.summary,
+                "start"    -> Json.obj(
+                  "dateTime" -> (if ev.dtStart.contains("T") then ev.dtStart else JsNull),
+                  "date"     -> (if !ev.dtStart.contains("T") then ev.dtStart else JsNull)),
+                "end"      -> Json.obj(
+                  "dateTime" -> (if ev.dtEnd.contains("T") then ev.dtEnd else JsNull),
+                  "date"     -> (if !ev.dtEnd.contains("T") then ev.dtEnd else JsNull)),
+                "location" -> ev.location.fold[JsValue](JsNull)(JsString.apply)
+              )
+            }
+          Ok(Json.obj("events" -> JsArray(events)))
+        }.recover { case ex =>
+          BadGateway(Json.obj("error" -> ex.getMessage))
         }
-      }
     }
-
-    // Show all upcoming events (no upper cutoff — ICS file already scopes what's shared)
-    val now = java.time.Instant.now()
-
-    val filtered = events.filter { ev =>
-      if (ev.dtStart.isEmpty) false
-      else try {
-        val instant = java.time.Instant.parse(ev.dtStart)
-        !instant.isBefore(now)
-      } catch { case _: Exception =>
-        try {
-          val date = java.time.LocalDate.parse(ev.dtStart)
-            .atStartOfDay(java.time.ZoneOffset.UTC).toInstant
-          !date.isBefore(now)
-        } catch { case _: Exception => false }
-      }
-    }.sortBy(_.dtStart)
-
-    JsArray(filtered.map { ev =>
-      Json.obj(
-        "id"      -> ev.uid,
-        "summary" -> ev.summary,
-        "start"   -> Json.obj("dateTime" -> (if ev.dtStart.contains("T") then ev.dtStart else JsNull),
-                              "date"      -> (if !ev.dtStart.contains("T") then ev.dtStart else JsNull)),
-        "end"     -> Json.obj("dateTime" -> (if ev.dtEnd.contains("T") then ev.dtEnd else JsNull),
-                              "date"      -> (if !ev.dtEnd.contains("T") then ev.dtEnd else JsNull)),
-        "location" -> ev.location.fold[JsValue](JsNull)(JsString.apply)
-      )
-    })
   }
 
-  // Convert ICS datetime (20250726T140000Z or 20250726) to ISO-8601
-  private def toIso(raw: String): String = {
-    val s = raw.trim
-    if (s.length == 8) {
-      // Date-only: YYYYMMDD
-      s"${s.substring(0,4)}-${s.substring(4,6)}-${s.substring(6,8)}"
-    } else if (s.endsWith("Z") && s.length >= 15) {
-      // UTC datetime: YYYYMMDDTHHmmssZ
-      val d = s.replace("Z", "")
-      s"${d.substring(0,4)}-${d.substring(4,6)}-${d.substring(6,8)}T${d.substring(9,11)}:${d.substring(11,13)}:${d.substring(13,15)}Z"
-    } else if (s.contains("T") && s.length >= 15) {
-      // Local datetime without Z: YYYYMMDDTHHmmss
-      val d = s.takeWhile(_ != 'Z')
-      s"${d.substring(0,4)}-${d.substring(4,6)}-${d.substring(6,8)}T${d.substring(9,11)}:${d.substring(11,13)}:${d.substring(13,15)}Z"
-    } else s
-  }
 }
