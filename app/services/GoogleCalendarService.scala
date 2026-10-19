@@ -25,7 +25,7 @@ class GoogleCalendarService @Inject()(
   private val redirectUri  = config.get[String]("google.redirectUri")
   private val frontendUrl  = config.get[String]("google.frontendUrl")
 
-  def getAuthUrl(userId: String): String = {
+  def getAuthUrl(userId: String, state: String): String = {
     def encode(s: String) = URLEncoder.encode(s, StandardCharsets.UTF_8)
     val params = Seq(
       s"client_id=${encode(clientId)}",
@@ -34,7 +34,7 @@ class GoogleCalendarService @Inject()(
       s"scope=${encode("https://www.googleapis.com/auth/calendar.readonly")}",
       s"access_type=offline",
       s"prompt=consent",
-      s"state=${encode(userId)}"
+      s"state=${encode(state)}"
     ).mkString("&")
     s"https://accounts.google.com/o/oauth2/v2/auth?$params"
   }

@@ -116,8 +116,8 @@ class Trading212Controller @Inject()(
         }).recover {
           case _: java.util.concurrent.TimeoutException =>
             GatewayTimeout(Json.obj("error" -> "Trading 212 timed out"))
-          case ex =>
-            BadGateway(Json.obj("error" -> ex.getMessage))
+          case _ =>
+            BadGateway(Json.obj("error" -> "Trading 212 unavailable"))
         }
     }
   }
