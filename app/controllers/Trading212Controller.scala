@@ -81,7 +81,7 @@ class Trading212Controller @Inject()(
           .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
           .get()
 
-        for {
+        (for {
           posRes  <- positionsFut
           cashRes <- cashFut
         } yield {
@@ -113,6 +113,11 @@ class Trading212Controller @Inject()(
               )
             ))
           }
+        }).recover {
+          case _: java.util.concurrent.TimeoutException =>
+            GatewayTimeout(Json.obj("error" -> "Trading 212 timed out"))
+          case ex =>
+            BadGateway(Json.obj("error" -> ex.getMessage))
         }
     }
   }
