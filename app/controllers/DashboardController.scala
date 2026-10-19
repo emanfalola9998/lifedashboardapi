@@ -15,19 +15,23 @@ class DashboardController @Inject()(
   secured: SecuredAction
 )(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
-  def getData(id: String): Action[AnyContent] = rateLimiter(secured.async { _ =>
-    dashboardService.getData(id).map {
-      case Some(data) => Ok(data).as("application/json")
-      case None       => Ok("{}").as("application/json")
+  def getData(id: String): Action[AnyContent] = secured.async { request =>
+    rateLimiter.checkOrReject(request) { () =>
+      dashboardService.getData(id).map {
+        case Some(data) => Ok(data).as("application/json")
+        case None       => Ok("{}").as("application/json")
+      }
     }
-  })
+  }
 
-  def saveData(id: String): Action[AnyContent] = rateLimiter(secured.async { request =>
-    request.body.asJson.map(_.toString) match {
-      case Some(json) =>
-        dashboardService.saveData(id, json).map(_ => Ok("saved"))
-      case None =>
-        Future.successful(BadRequest("data is missing"))
+  def saveData(id: String): Action[AnyContent] = secured.async { request =>
+    rateLimiter.checkOrReject(request) { () =>
+      request.body.asJson.map(_.toString) match {
+        case Some(json) =>
+          dashboardService.saveData(id, json).map(_ => Ok("saved"))
+        case None =>
+          Future.successful(BadRequest("data is missing"))
+      }
     }
-  })
+  }
 }

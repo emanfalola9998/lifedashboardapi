@@ -4,4 +4,4 @@ target/
 .metals/
 .vscode/
 *.log
-local.conf
+**/local.conf

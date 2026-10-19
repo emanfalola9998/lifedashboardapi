@@ -28,17 +28,18 @@ class RateLimitFilter @Inject()(implicit ec: ExecutionContext) {
     }
   }
 
+  private def keyFor(request: RequestHeader): String =
+    request.headers.get("X-User-Id")
+      .orElse(request.headers.get("X-Forwarded-For"))
+      .getOrElse(request.remoteAddress)
+
+  def checkOrReject(request: RequestHeader)(body: () => Future[Result]): Future[Result] =
+    if (check(keyFor(request))) body()
+    else Future.successful(Results.TooManyRequests("Rate limit exceeded. Try again in a minute."))
+
   def apply[A](action: Action[A]): Action[A] = new Action[A] {
     def parser: BodyParser[A] = action.parser
-
-    def apply(request: Request[A]): Future[Result] = {
-      val key = request.headers.get("X-User-Id")
-        .orElse(request.headers.get("X-Forwarded-For"))
-        .getOrElse(request.remoteAddress)
-      if (check(key)) action(request)
-      else Future.successful(Results.TooManyRequests("Rate limit exceeded. Try again in a minute."))
-    }
-
+    def apply(request: Request[A]): Future[Result] = checkOrReject(request)(() => action(request))
     override def executionContext: ExecutionContext = ec
   }
 }

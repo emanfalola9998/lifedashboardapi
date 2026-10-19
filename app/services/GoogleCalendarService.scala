@@ -112,8 +112,9 @@ class GoogleCalendarService @Inject()(
               val items = (response.json \ "items").getOrElse(JsArray())
               Json.obj("connected" -> true, "events" -> items)
             }
-        }.recover { case _ =>
-          Json.obj("connected" -> false, "events" -> JsArray())
+        }.recoverWith {
+          case t: java.util.concurrent.TimeoutException => Future.failed(t)
+          case _ => Future.successful(Json.obj("connected" -> false, "events" -> JsArray()))
         }
     }
   }
