@@ -47,7 +47,7 @@ class GoogleAuthController @Inject()(
     }
   }
 
-  def redirect: Action[AnyContent] = secured { implicit request =>
+  def redirect: Action[AnyContent] = secured { request =>
     val userId = request.getQueryString("userId").getOrElse("default-user")
     Redirect(calendarService.getAuthUrl(userId, signState(userId)))
   }

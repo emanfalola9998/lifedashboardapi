@@ -19,9 +19,14 @@ class SecuredAction @Inject()(
   private def check(r: RequestHeader): Boolean =
     r.headers.get("X-Internal-Secret").contains(secret)
 
-  /** Wraps a synchronous block. */
+  /** Wraps a synchronous block (no request access). */
   def apply(block: => Result): Action[AnyContent] = action { request =>
     if (check(request)) block else unauthorised
+  }
+
+  /** Wraps a synchronous block with access to the request. */
+  def apply(block: Request[AnyContent] => Result): Action[AnyContent] = action { request =>
+    if (check(request)) block(request) else unauthorised
   }
 
   /** Wraps an async block with access to the request. */
