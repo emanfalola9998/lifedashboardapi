@@ -10,7 +10,7 @@ import play.api.mvc.*
 class RateLimitFilter @Inject()(implicit ec: ExecutionContext) {
 
   private val WINDOW_MS  = 60_000L
-  private val MAX_CALLS  = 60
+  private val MAX_CALLS  = 200
 
   private case class Window(count: AtomicLong, windowStart: AtomicLong)
   private val windows = new ConcurrentHashMap[String, Window]()
