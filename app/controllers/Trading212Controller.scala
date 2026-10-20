@@ -7,7 +7,9 @@ import repositories.Trading212Repository
 import actions.SecuredAction
 import parsing.T212Normaliser
 import javax.inject.*
+import java.util.concurrent.TimeoutException
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.*
 
 @Singleton
 class Trading212Controller @Inject()(
@@ -23,8 +25,14 @@ class Trading212Controller @Inject()(
   private val LIVE_BASE = "https://live.trading212.com/api/v0"
   private val DEMO_BASE = "https://demo.trading212.com/api/v0"
 
-  def status(userId: String): Action[AnyContent] = secured {
-    Ok(Json.obj("connected" -> repo.getKey(userId).isDefined))
+  private def t212Get(base: String, path: String, auth: String): Future[WSResponse] =
+    ws.url(s"$base$path")
+      .withHttpHeaders("Authorization" -> auth)
+      .withRequestTimeout(10.seconds)
+      .get()
+
+  def status(userId: String): Action[AnyContent] = secured.async {
+    repo.hasKey(userId).map(connected => Ok(Json.obj("connected" -> connected)))
   }
 
   def connect(userId: String): Action[JsValue] = secured.async(parse.json) { (request: Request[JsValue]) =>
@@ -38,48 +46,50 @@ class Trading212Controller @Inject()(
           s"Basic $encoded"
         } else key
 
-        // Probe live first, fall back to demo — stores "live:<authHeader>" or "demo:<authHeader>"
-        val timeout = scala.concurrent.duration.Duration(10, "seconds")
-        ws.url(s"$LIVE_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).withRequestTimeout(timeout).get().flatMap { res =>
-          if (res.status == 200) {
-            repo.saveKey(userId, s"live:$authHeader")
-            Future.successful(Ok(Json.obj("connected" -> true, "mode" -> "live")))
-          } else {
-            ws.url(s"$DEMO_BASE/equity/account/cash").withHttpHeaders("Authorization" -> authHeader).withRequestTimeout(timeout).get().map { dRes =>
-              if (dRes.status == 200) {
-                repo.saveKey(userId, s"demo:$authHeader")
-                Ok(Json.obj("connected" -> true, "mode" -> "demo"))
-              } else {
-                Unauthorized(Json.obj("error" -> s"Invalid credentials (got ${res.status} from live, ${dRes.status} from demo) — check your ID and Key"))
+        // Probe live first. Only a 401 (key not recognised there) means "try demo" — a 403, 429
+        // or 5xx is reported as-is, so T212 being down isn't mistaken for bad credentials.
+        t212Get(LIVE_BASE, "/equity/account/cash", authHeader).flatMap { live =>
+          live.status match {
+            case 200 => saveAndConfirm(userId, "live", authHeader)
+            case 401 =>
+              t212Get(DEMO_BASE, "/equity/account/cash", authHeader).flatMap { demo =>
+                demo.status match {
+                  case 200   => saveAndConfirm(userId, "demo", authHeader)
+                  case 401   => Future.successful(Unauthorized(Json.obj("error" -> "Invalid credentials — check your API ID and key")))
+                  case other => Future.successful(probeFailed(other))
+                }
               }
-            }
+            case other => Future.successful(probeFailed(other))
           }
+        }.recover {
+          case _: TimeoutException => GatewayTimeout(Json.obj("error" -> "Trading 212 timed out"))
         }
     }
   }
 
-  def disconnect(userId: String): Action[AnyContent] = secured {
-    repo.deleteKey(userId)
-    Ok(Json.obj("connected" -> false))
+  private def saveAndConfirm(userId: String, mode: String, authHeader: String): Future[Result] =
+    repo.saveKey(userId, s"$mode:$authHeader").map(_ => Ok(Json.obj("connected" -> true, "mode" -> mode)))
+
+  private def probeFailed(status: Int): Result = status match {
+    case 403   => BadRequest(Json.obj("error" -> "Trading 212 rejected this key — check its permissions and IP restrictions"))
+    case 429   => TooManyRequests(Json.obj("error" -> "Trading 212 rate limit hit — try again in a minute"))
+    case other => BadGateway(Json.obj("error" -> s"Trading 212 error: $other"))
+  }
+
+  def disconnect(userId: String): Action[AnyContent] = secured.async {
+    repo.deleteKey(userId).map(_ => Ok(Json.obj("connected" -> false)))
   }
 
   def portfolio(userId: String): Action[AnyContent] = secured.async {
-    repo.getKey(userId) match {
+    repo.getKey(userId).flatMap {
       case None => Future.successful(Unauthorized(Json.obj("error" -> "Not connected")))
       case Some(stored) =>
         val (base, apiKey) = if (stored.startsWith("demo:")) (DEMO_BASE, stored.drop(5))
                              else (LIVE_BASE, if (stored.startsWith("live:")) stored.drop(5) else stored)
-        val headers = Seq("Authorization" -> apiKey)
 
-        val positionsFut = ws.url(s"$base/equity/portfolio")
-          .withHttpHeaders(headers: _*)
-          .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
-          .get()
-
-        val cashFut = ws.url(s"$base/equity/account/cash")
-          .withHttpHeaders(headers: _*)
-          .withRequestTimeout(scala.concurrent.duration.Duration(10, "seconds"))
-          .get()
+        // Both requests start here, before the for — so they run in parallel
+        val positionsFut = t212Get(base, "/equity/portfolio", apiKey)
+        val cashFut      = t212Get(base, "/equity/account/cash", apiKey)
 
         (for {
           posRes  <- positionsFut
@@ -114,7 +124,7 @@ class Trading212Controller @Inject()(
             ))
           }
         }).recover {
-          case _: java.util.concurrent.TimeoutException =>
+          case _: TimeoutException =>
             GatewayTimeout(Json.obj("error" -> "Trading 212 timed out"))
           case _ =>
             BadGateway(Json.obj("error" -> "Trading 212 unavailable"))
